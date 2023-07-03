@@ -21,7 +21,7 @@ is_noisy = raw(2:end, 21);
 
 % ++++++++ CHANGE LOOP START and END ++++++++
 loop_start = 1;
-loop_end = length(start_times); % some number of length(start_times)
+loop_end = 4; % some number of length(start_times)
 
 % paranoid checks regarding length of variable
 paranoid_checks;
@@ -59,27 +59,43 @@ end
 image_files = dir(fullfile(strcat(selpath,'/All'), '*.png'));
 image_file_names = {image_files.name};
 
-for i=loop_start:loop_end
+% New index variable for the loop
+i = loop_start;
+
+% Create figure and buttons before the loop
+f = figure('NumberTitle', 'off', 'Name', "Review VocatMat classification", 'Units', 'normalized', 'Position', [0 0 1 1], 'UserData', 0);
+next_button = uicontrol('Style', 'pushbutton', 'String', 'Next', ...
+    'Units', 'normalized', 'Position', [0.35 0.01 0.15 0.05], ... %changed
+    'Callback', @(hObject,eventdata)next_button_Callback(hObject,eventdata));
+
+prev_button = uicontrol('Style', 'pushbutton', 'String', 'Previous', ...
+    'Units', 'normalized', 'Position', [0.5 0.01 0.15 0.05], ... %changed
+    'Callback', @(hObject,eventdata)prev_button_Callback(hObject,eventdata));
+
+
+
+
+while i <= loop_end
 % for i=1:length(image_file_names)
     image_path = fullfile(strcat(selpath,'/All'), image_file_names{i});
-    f = figure('NumberTitle', 'off', 'Name', "Review VocatMat classification", 'Units', 'normalized', 'Position', [0 0 1 1], 'UserData', 0);
     
-
-    % Load and display an image
+       % Load and display an image
     img = imread(image_path); % replace with your image file path
     subplot('Position', [0 0.5 1 0.5]); % create a subplot for the image in the top half of the screen
     imshow(img);
 
     % classification info
     class5_type = class11_to_class5_map(classes{i});
-    machine_classification_info = ['Syllable ', num2str(i), '/', num2str(length(image_file_names)) ' Machine Classification - Class 11: ' classes{i} ' Class 5: ' class5_type];
+     % additional info about harmonic and noisy
+    additional_info = ['Additional Info: Harmonic: ', num2str(is_harmonic{i}), ' Noisy: ', num2str(is_noisy{i})];
+    machine_classification_info = ['Syllable ', num2str(i), '/', num2str(length(image_file_names)) ' Machine Classification - Class 11: ' classes{i} ' Class 5: ' class5_type ' ' additional_info];
     textLabel1 = uicontrol('Style', 'text', 'String', machine_classification_info, ...
-            'Units', 'normalized', 'Position', [0.25 0.45 0.5 0.05], 'FontWeight', 'bold', 'FontSize', 16);
+            'Units', 'normalized', 'Position', [0.25 0.45 0.5 0.05], 'FontWeight', 'bold', 'FontSize', 14);
 
     % question
     question = 'Accept or Choose the correct class for the syllable';
     textLabel2 = uicontrol('Style', 'text', 'String', question, ...
-            'Units', 'normalized', 'Position', [0.25 0.35 0.5 0.05], 'FontWeight', 'bold','FontSize', 16);
+            'Units', 'normalized', 'Position', [0.25 0.35 0.5 0.05], 'FontWeight', 'bold','FontSize', 14);
 
     % buttons to click
     accept_msg = ['Accept ', class5_type];
@@ -106,15 +122,30 @@ for i=loop_start:loop_end
     button4 = uicontrol('Style', 'pushbutton', 'String', rest4_types{4}, ...
         'Units', 'normalized', 'Position', [0.4 0.15 0.2 0.05], 'Callback', @(hObject,eventdata)option_button_Callback(hObject,eventdata,struct('row_num', i, 'human_marked_class5', rest4_types{4}, 'xlsx_file_data', xlsx_file_data)));
 
-    % additional info about harmonic and noisy
-    additional_info = ['Additional Info: Harmonic: ', num2str(is_harmonic{i}), ' Noisy: ', num2str(is_noisy{i})]
-    textLabel3 = uicontrol('Style', 'text', 'String', additional_info, ...
-            'Units', 'normalized', 'Position', [0.25 0.05 0.5 0.05], 'FontWeight', 'bold','FontSize', 16);
+   
 
+    % Wait for button press
+    waitfor(f, 'UserData');
+    
+    % Get UserData
+    action = f.UserData;
+   % Next iteration
+    if strcmp(action, 'next') && i <= loop_end
+        i = i + 1;
+        disp([' Reviewed ' num2str(i-1) '/' num2str(loop_end) ' syllables'])
+        
+    % Previous iteration
+    elseif strcmp(action, 'prev') && i > loop_start
+        i = i - 1;
+        if i < 1
+            i = 1;
+        end
+    end
 
-    waitfor(f, 'UserData')
-    f.UserData = 0;  % Reset UserData for the next iteration
-    close all;
+    % Reset UserData
+    f.UserData = '';
+
+    
     
 end
 
@@ -138,4 +169,14 @@ function update_syllable_data(row_num, class_5_by_human, xlsx_file_data)
 
     save('syllable_data', "syllable_data")
     disp('------ saving data ------')
+end
+
+function next_button_Callback(hObject, eventdata)
+    f = gcf;
+    f.UserData = 'next';
+end
+
+function prev_button_Callback(hObject, eventdata)
+    f = gcf;
+    f.UserData = 'prev';
 end
