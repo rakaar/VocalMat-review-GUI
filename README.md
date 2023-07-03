@@ -1,4 +1,4 @@
-Review syllable marked by [ahof1704/VocalMat](https://github.com/ahof1704/VocalMat)([paper](https://elifesciences.org/articles/59161))
+GUI for Manual review syllables marked by [ahof1704/VocalMat](https://github.com/ahof1704/VocalMat)([paper](https://elifesciences.org/articles/59161))
 
 # To use
 1. Run 'review_vocalmat`

@@ -76,7 +76,6 @@ prev_button = uicontrol('Style', 'pushbutton', 'String', 'Previous', ...
 
 
 while i <= loop_end
-% for i=1:length(image_file_names)
     image_path = fullfile(strcat(selpath,'/All'), image_file_names{i});
     
        % Load and display an image
