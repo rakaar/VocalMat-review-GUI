@@ -19,6 +19,9 @@ classes = raw(2:end, 19);
 is_harmonic = raw(2:end, 20);
 is_noisy = raw(2:end, 21);
 
+% ++++++++ CHANGE LOOP START and END ++++++++
+loop_start = 1;
+loop_end = length(start_times); % some number of length(start_times)
 
 % paranoid checks regarding length of variable
 paranoid_checks;
@@ -44,17 +47,22 @@ class11_to_class5_map('noise_dist') = 'noise';
 
 
 % final data
-syllable_data = struct('start_time', {}, 'end_time', {}, 'class_11_by_machine', {}, 'class_5_by_machine', {}, 'class_5_by_human', {}, 'is_harmonic', {}, 'is_noisy', {});
-save('syllable_data.mat', 'syllable_data')
+if exist('syllable_data.mat', 'file') == 2
+    syllable_data = load('syllable_data.mat').syllable_data;
+else
+    syllable_data = struct('start_time', {}, 'end_time', {}, 'class_11_by_machine', {}, 'class_5_by_machine', {}, 'class_5_by_human', {}, 'is_harmonic', {}, 'is_noisy', {});
+    save('syllable_data.mat', 'syllable_data')
+end
+
 
 % Get the image files
 image_files = dir(fullfile(strcat(selpath,'/All'), '*.png'));
 image_file_names = {image_files.name};
 
-for i=1:10
+for i=loop_start:loop_end
 % for i=1:length(image_file_names)
     image_path = fullfile(strcat(selpath,'/All'), image_file_names{i});
-    f = figure('NumberTitle', 'off', 'Name', "Review VocatMat classification", 'Units', 'normalized', 'Position', [0 0 1 1]);
+    f = figure('NumberTitle', 'off', 'Name', "Review VocatMat classification", 'Units', 'normalized', 'Position', [0 0 1 1], 'UserData', 0);
     
 
     % Load and display an image
@@ -104,7 +112,8 @@ for i=1:10
             'Units', 'normalized', 'Position', [0.25 0.05 0.5 0.05], 'FontWeight', 'bold','FontSize', 16);
 
 
-    pause
+    waitfor(f, 'UserData')
+    f.UserData = 0;  % Reset UserData for the next iteration
     close all;
     
 end
@@ -112,6 +121,8 @@ end
 % Callback functions for buttons
 function option_button_Callback(hObject, eventdata, data)
     update_syllable_data(data.row_num, data.human_marked_class5, data.xlsx_file_data);
+    f = gcf;  % Get the handle to the current figure
+    f.UserData = 1;  % Change the UserData property
 end
 
 function update_syllable_data(row_num, class_5_by_human, xlsx_file_data)
